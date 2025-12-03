@@ -14,7 +14,7 @@ const getAiClient = () => {
 export const initializeChat = () => {
   const ai = getAiClient();
   chatSession = ai.chats.create({
-    model: "gemini-3-pro-preview",
+    model: "gemini-2.5-flash",
     config: {
       systemInstruction: GENIE_SYSTEM_INSTRUCTION,
       temperature: 0.9, // Creative and erratic
