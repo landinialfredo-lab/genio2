@@ -18,13 +18,13 @@ export const initializeChat = () => {
     config: {
       systemInstruction: GENIE_SYSTEM_INSTRUCTION,
       temperature: 0.9, // Creative and erratic
-      topK: 40,
-      topP: 0.95,
+      maxOutputTokens: 400, // Limit response length for speed and brevity
     },
   });
   return chatSession;
 };
 
+// Old method kept for fallback or specific uses, but we mostly use stream now
 export const sendMessageToGenie = async (message: string): Promise<string> => {
   if (!chatSession) {
     initializeChat();
@@ -42,5 +42,43 @@ export const sendMessageToGenie = async (message: string): Promise<string> => {
   } catch (error) {
     console.error("Error talking to Genie:", error);
     return "Argh! Interferenze cosmiche! I miei poteri sono momentaneamente... ridotti! Riprova, Al!";
+  }
+};
+
+// New Streaming Method
+export const sendMessageToGenieStream = async (
+  message: string, 
+  onChunk: (text: string) => void
+): Promise<string> => {
+  if (!chatSession) {
+    initializeChat();
+  }
+
+  if (!chatSession) {
+    throw new Error("Failed to initialize chat session");
+  }
+
+  try {
+    const resultStream = await chatSession.sendMessageStream({
+      message: message,
+    });
+
+    let fullText = "";
+    
+    for await (const chunk of resultStream) {
+      const c = chunk as GenerateContentResponse;
+      const text = c.text;
+      if (text) {
+        fullText += text;
+        onChunk(fullText);
+      }
+    }
+    
+    return fullText || "Ehm... mi sono perso nei miei stessi poteri!";
+  } catch (error) {
+    console.error("Error talking to Genie (Stream):", error);
+    const errorMsg = "Argh! Interferenze cosmiche! Riprova, Al!";
+    onChunk(errorMsg);
+    return errorMsg;
   }
 };
