@@ -14,17 +14,16 @@ const getAiClient = () => {
 export const initializeChat = () => {
   const ai = getAiClient();
   chatSession = ai.chats.create({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-pro-preview",
     config: {
       systemInstruction: GENIE_SYSTEM_INSTRUCTION,
       temperature: 0.9, // Creative and erratic
-      maxOutputTokens: 400, // Limit response length for speed and brevity
+      // Removed maxOutputTokens to prevent potential cut-off errors with the Pro model
     },
   });
   return chatSession;
 };
 
-// Old method kept for fallback or specific uses, but we mostly use stream now
 export const sendMessageToGenie = async (message: string): Promise<string> => {
   if (!chatSession) {
     initializeChat();
@@ -41,44 +40,8 @@ export const sendMessageToGenie = async (message: string): Promise<string> => {
     return result.text || "Oioioi! Mi si è incriccato il collo magico. Riprova!";
   } catch (error) {
     console.error("Error talking to Genie:", error);
+    // Restart session on error just in case
+    chatSession = null;
     return "Argh! Interferenze cosmiche! I miei poteri sono momentaneamente... ridotti! Riprova, Al!";
-  }
-};
-
-// New Streaming Method
-export const sendMessageToGenieStream = async (
-  message: string, 
-  onChunk: (text: string) => void
-): Promise<string> => {
-  if (!chatSession) {
-    initializeChat();
-  }
-
-  if (!chatSession) {
-    throw new Error("Failed to initialize chat session");
-  }
-
-  try {
-    const resultStream = await chatSession.sendMessageStream({
-      message: message,
-    });
-
-    let fullText = "";
-    
-    for await (const chunk of resultStream) {
-      const c = chunk as GenerateContentResponse;
-      const text = c.text;
-      if (text) {
-        fullText += text;
-        onChunk(fullText);
-      }
-    }
-    
-    return fullText || "Ehm... mi sono perso nei miei stessi poteri!";
-  } catch (error) {
-    console.error("Error talking to Genie (Stream):", error);
-    const errorMsg = "Argh! Interferenze cosmiche! Riprova, Al!";
-    onChunk(errorMsg);
-    return errorMsg;
   }
 };

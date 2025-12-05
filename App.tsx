@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LampTrigger from './components/LampTrigger';
 import ChatInterface from './components/ChatInterface';
 import { Message, Role } from './types';
-import { sendMessageToGenieStream, initializeChat } from './services/geminiService';
+import { sendMessageToGenie, initializeChat } from './services/geminiService';
 import { INITIAL_GREETING } from './constants';
 
 const App: React.FC = () => {
@@ -40,40 +40,28 @@ const App: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    // 2. Create a placeholder for the Genie's message immediately
-    const genieMsgId = (Date.now() + 1).toString();
-    const initialGenieMsg: Message = {
-      id: genieMsgId,
-      role: Role.MODEL,
-      text: "...", // Placeholder that will be overwritten instantly
-      timestamp: new Date(),
-    };
-    
-    setMessages((prev) => [...prev, initialGenieMsg]);
-
     try {
-      // 3. Call streaming service
-      await sendMessageToGenieStream(text, (currentText) => {
-        // This callback runs every time a new chunk of text arrives
-        setMessages((prev) => 
-          prev.map((msg) => 
-            msg.id === genieMsgId 
-              ? { ...msg, text: currentText } 
-              : msg
-          )
-        );
-      });
+      // 2. Call service (standard await)
+      const responseText = await sendMessageToGenie(text);
+      
+      const genieMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: Role.MODEL,
+        text: responseText,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, genieMsg]);
       
     } catch (error) {
       console.error("Failed to get response", error);
-      // Update the placeholder with an error message if it fails completely
-       setMessages((prev) => 
-          prev.map((msg) => 
-            msg.id === genieMsgId 
-              ? { ...msg, text: "Oioioi! Qualcosa è andato storto nella lampada!" } 
-              : msg
-          )
-        );
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: Role.MODEL,
+        text: "Oioioi! Qualcosa è andato storto nella lampada!",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
     }
