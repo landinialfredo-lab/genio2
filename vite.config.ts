@@ -11,7 +11,11 @@ export default defineConfig(({ mode }) => {
     define: {
       // In production (Vercel), env.API_KEY might be missing from loadEnv if it's not in a .env file.
       // We fallback to process.env.API_KEY which Vercel provides.
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY)
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY),
+      
+      // CONFIGURAZIONE LOGGING SU GOOGLE SHEETS
+      // 👇👇👇 INCOLLA QUI SOTTO IL TUO LINK APP SCRIPT (sostituisci la scritta tra virgolette) 👇👇👇
+      'process.env.LOGGING_ENDPOINT': JSON.stringify("INCOLLA_QUI_IL_TUO_URL_SCRIPT_GOOGLE")
     }
   }
 })
