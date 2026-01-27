@@ -3,19 +3,16 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  // Carica le variabili dal file .env se presente
   const env = loadEnv(mode, (process as any).cwd(), '');
   return {
     plugins: [react()],
     define: {
-      // In production (Vercel), env.API_KEY might be missing from loadEnv if it's not in a .env file.
-      // We fallback to process.env.API_KEY which Vercel provides.
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY),
+      // Abbiamo rimosso process.env.API_KEY da qui. 
+      // Vite non lo "scriverà" più nel file JS finale, rendendolo invisibile all'esterno.
       
-      // CONFIGURAZIONE LOGGING SU GOOGLE SHEETS
-      // 👇👇👇 INCOLLA QUI SOTTO IL TUO LINK APP SCRIPT (sostituisci la scritta tra virgolette) 👇👇👇
-      'process.env.LOGGING_ENDPOINT': JSON.stringify("INCOLLA_QUI_IL_TUO_URL_SCRIPT_GOOGLE")
+      // Manteniamo solo l'endpoint di logging per le statistiche del foglio Google
+      'process.env.LOGGING_ENDPOINT': JSON.stringify(env.LOGGING_ENDPOINT || process.env.LOGGING_ENDPOINT || "")
     }
   }
 })
